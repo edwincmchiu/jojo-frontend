@@ -30,20 +30,21 @@ export default function EventFeed() {
   if (loading) return <div className="p-10 text-center text-gray-500">載入活動中...</div>;
 
   return (
-    <div className="pb-24 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
-      <div className="bg-brand-dark text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-10">
-        <h1 className="text-xl font-bold tracking-wider text-brand-yellow">JoJo 活動廣場</h1>
-        <p className="text-xs text-gray-400 mt-1">即時媒合校園生活夥伴</p>
+      <div className="bg-white border-b border-gray-200 p-8 shadow-sm">
+        <h1 className="text-3xl font-bold text-brand-dark mb-2">活動廣場</h1>
+        <p className="text-sm text-gray-500">發現更多校園活動，與同學一起參與</p>
       </div>
 
-      <div className="px-4 space-y-4">
+      <div className="p-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map(ev => {
           const isFull = ev.currentPeople >= ev.capacity;
           const percent = Math.min(100, (ev.currentPeople / ev.capacity) * 100);
 
           return (
-            <div key={ev.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div key={ev.id} className="bg-white rounded-2xl p-5 shadow-md border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-xl border border-yellow-100">
@@ -95,6 +96,7 @@ export default function EventFeed() {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

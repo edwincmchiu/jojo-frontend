@@ -40,7 +40,7 @@ export default function CreateEventWizard() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden min-h-[800px] flex flex-col relative font-sans text-brand-dark">
+    <div className="w-full max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden flex flex-col relative font-sans text-brand-dark">
       <Header currentStep={currentStep} />
 
       <div className="flex-1 p-6 overflow-y-auto">

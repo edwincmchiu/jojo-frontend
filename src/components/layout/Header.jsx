@@ -4,7 +4,6 @@ export default function Header({ currentStep }) {
   return (
     <div className="bg-brand-dark text-white p-6 rounded-b-3xl shadow-md z-10">
       <div className="flex justify-between items-center mb-6">
-        <button className="text-gray-400 hover:text-white">&lt; 返回</button>
         <h1 className="text-xl font-bold tracking-wider text-brand-yellow">JoJo 揪揪</h1>
         <div className="w-8"></div>
       </div>

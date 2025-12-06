@@ -16,10 +16,10 @@ export default function UserProfile() {
   if (loading) return <div className="p-10 text-center text-gray-400">載入個人資料...</div>;
 
   return (
-    <div className="pb-24 animate-fade-in bg-gray-50 min-h-full">
+    <div className="animate-fade-in bg-gray-50 min-h-full">
       
       {/* 1. Header & 基本資料 (USER Table) */}
-      <div className="bg-white p-6 pb-8 rounded-b-3xl shadow-sm mb-4">
+      <div className="bg-white p-8 pb-10 shadow-sm mb-6">
         <div className="flex flex-col items-center">
           <div className="w-24 h-24 bg-brand-yellow rounded-full flex items-center justify-center text-5xl shadow-md border-4 border-white mb-4">
             {user.avatar}
@@ -51,8 +51,8 @@ export default function UserProfile() {
       </div>
 
       {/* 4. 活動紀錄 (EVENT & JOIN_RECORD Tables) */}
-      <div className="px-4">
-        <h3 className="font-bold text-lg text-gray-800 mb-3 px-1">我的活動紀錄</h3>
+      <div className="px-8 max-w-4xl mx-auto">
+        <h3 className="font-bold text-2xl text-gray-800 mb-4">我的活動紀錄</h3>
         
         {/* Tab Switcher */}
         <div className="flex bg-gray-200 p-1 rounded-xl mb-4">
