@@ -25,10 +25,16 @@ export default function CreateEventWizard() {
   });
 
   const nextStep = async () => {
-    // Step 1 驗證：必須輸入標題
-    if (currentStep === 1 && !formData.title.trim()) {
-      alert('請輸入活動標題');
-      return;
+    // Step 1 驗證：必須輸入標題和選擇類型
+    if (currentStep === 1) {
+      if (!formData.title.trim()) {
+        alert('請輸入活動標題');
+        return;
+      }
+      if (!formData.typeId) {
+        alert('請選擇活動類型');
+        return;
+      }
     }
 
     if (currentStep < 3) {

@@ -15,7 +15,7 @@ export default function Step1BasicInfo({ formData, setFormData }) {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          活動標題 <span className="text-red-500">*</span>
+          活動標題
         </label>
         <input 
           name="title" 
@@ -31,7 +31,9 @@ export default function Step1BasicInfo({ formData, setFormData }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">活動類型</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          活動類型
+        </label>
         <div className="grid grid-cols-2 gap-3">
           {ACTIVITY_TYPES.map(type => (
             <div 
@@ -44,6 +46,9 @@ export default function Step1BasicInfo({ formData, setFormData }) {
             </div>
           ))}
         </div>
+        {!formData.typeId && (
+          <p className="text-xs text-gray-400 mt-2">請選擇活動類型才能繼續</p>
+        )}
       </div>
 
       <div>
