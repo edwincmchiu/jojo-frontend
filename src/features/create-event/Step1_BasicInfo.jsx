@@ -14,14 +14,20 @@ export default function Step1BasicInfo({ formData, setFormData }) {
       <h2 className="text-2xl font-bold text-gray-800">想揪什麼？</h2>
       
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">活動標題</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          活動標題 <span className="text-red-500">*</span>
+        </label>
         <input 
           name="title" 
           value={formData.title} 
           onChange={handleChange}
           placeholder="例如：期中考計算機結構讀書會" 
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/50 outline-none transition-all"
+          required
         />
+        {!formData.title && (
+          <p className="text-xs text-gray-400 mt-1">請輸入活動標題才能繼續</p>
+        )}
       </div>
 
       <div>

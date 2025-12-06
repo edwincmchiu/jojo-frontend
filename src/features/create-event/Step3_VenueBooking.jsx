@@ -1,42 +1,23 @@
 import { useState, useEffect } from 'react';
-import { fetchVenueAvailability, fetchVenues } from '../../api/venue';
+import { fetchVenues } from '../../api/venue';
 
 export default function Step3VenueBooking({ formData, setFormData }) {
   const [venues, setVenues] = useState([]);
-  const [bookedSlots, setBookedSlots] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 初始化場地列表
+  // 當選擇校內場地時，查詢可用場地列表
   useEffect(() => {
-    fetchVenues().then(data => {
+    if (formData.isOnCampus) {
+      setLoading(true);
+      fetchVenues().then(data => {
         setVenues(data);
         if (!formData.venueId && data.length > 0) {
-            setFormData(prev => ({ ...prev, venueId: data[0].id }));
+          setFormData(prev => ({ ...prev, venueId: data[0].id }));
         }
-    });
-  }, []);
-
-  // 當場地或日期改變時，查詢狀態
-  useEffect(() => {
-    if (formData.needBook && formData.venueId) {
-      setLoading(true);
-      fetchVenueAvailability(formData.date, formData.venueId)
-        .then(data => {
-          setBookedSlots(data.bookedSlots);
-          setLoading(false);
-        });
+        setLoading(false);
+      });
     }
-  }, [formData.needBook, formData.venueId, formData.date]);
-
-  const toggleSlot = (hour) => {
-      // 這裡可以加入「連續三小時」的邏輯檢查
-      const currentSlots = formData.selectedSlots || [];
-      if (currentSlots.includes(hour)) {
-          setFormData(prev => ({ ...prev, selectedSlots: currentSlots.filter(h => h !== hour) }));
-      } else {
-          setFormData(prev => ({ ...prev, selectedSlots: [...currentSlots, hour].sort() }));
-      }
-  };
+  }, [formData.isOnCampus]);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -48,80 +29,81 @@ export default function Step3VenueBooking({ formData, setFormData }) {
           type="date" 
           value={formData.date}
           onChange={(e) => setFormData({...formData, date: e.target.value})}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/50 outline-none transition-all"
         />
       </div>
 
-      {/* Toggle */}
-      <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
-        <div>
-          <span className="font-bold text-gray-800">需借用校內場地</span>
-          <p className="text-xs text-gray-500">對應 Need_book = True</p>
+      {/* 校內/校外選擇 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">場地類型</label>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            onClick={() => setFormData({...formData, isOnCampus: true, locationName: ''})}
+            className={`p-4 rounded-xl border-2 transition-all ${
+              formData.isOnCampus
+                ? 'border-brand-yellow bg-yellow-50 ring-2 ring-brand-yellow/50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="text-3xl mb-2">🏫</div>
+            <div className="font-bold text-gray-800">校內場地</div>
+            <div className="text-xs text-gray-500 mt-1">需選擇可用場地</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFormData({...formData, isOnCampus: false, venueId: ''})}
+            className={`p-4 rounded-xl border-2 transition-all ${
+              !formData.isOnCampus
+                ? 'border-brand-yellow bg-yellow-50 ring-2 ring-brand-yellow/50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="text-3xl mb-2">🌍</div>
+            <div className="font-bold text-gray-800">校外場地</div>
+            <div className="text-xs text-gray-500 mt-1">自訂地點名稱</div>
+          </button>
         </div>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={formData.needBook}
-            onChange={(e) => setFormData({...formData, needBook: e.target.checked})}
-            className="sr-only peer" 
-          />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-dark"></div>
-        </label>
       </div>
 
-      {/* 場地選擇與時間軸 */}
-      {formData.needBook ? (
-          <div className="space-y-4">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">選擇場地 (VENUE)</label>
-                  <select 
-                      value={formData.venueId}
-                      onChange={(e) => setFormData({...formData, venueId: e.target.value})}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white outline-none"
-                  >
-                      {venues.map(v => (
-                          <option key={v.id} value={v.id}>{v.name} (容納: {v.capacity}人)</option>
-                      ))}
-                  </select>
-              </div>
-
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">查詢時段 (VENUE_BOOKING)</label>
-                  {loading ? (
-                      <div className="text-sm text-gray-500 animate-pulse">正在查詢資料庫...</div>
-                  ) : (
-                      <div className="grid grid-cols-4 gap-2">
-                          {[8,9,10,11,12,13,14,15,16,17,18,19,20].map(hour => {
-                              const isBooked = bookedSlots.includes(hour);
-                              const isSelected = formData.selectedSlots?.includes(hour);
-                              
-                              return (
-                                  <button
-                                      key={hour}
-                                      disabled={isBooked}
-                                      onClick={() => toggleSlot(hour)}
-                                      className={`py-2 rounded text-sm font-medium border transition-all ${
-                                          isBooked 
-                                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                                          : isSelected
-                                              ? 'bg-brand-yellow border-brand-yellow text-brand-dark ring-2 ring-brand-yellow/50'
-                                              : 'bg-white border-gray-300 hover:border-brand-yellow'
-                                      }`}
-                                  >
-                                      {hour}:00
-                                  </button>
-                              );
-                          })}
-                      </div>
-                  )}
-                  <p className="text-xs text-orange-500 mt-2">* 灰色為已被預約 (Status check)</p>
-              </div>
-          </div>
+      {/* 校內場地：顯示場地下拉選單 */}
+      {formData.isOnCampus ? (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">選擇校內場地</label>
+          {loading ? (
+            <div className="text-sm text-gray-500 animate-pulse">載入場地列表...</div>
+          ) : (
+            <select 
+              value={formData.venueId}
+              onChange={(e) => setFormData({...formData, venueId: e.target.value})}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/50 outline-none transition-all"
+            >
+              {venues.length === 0 ? (
+                <option value="">無可用場地</option>
+              ) : (
+                venues.map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} (容納 {v.capacity} 人)
+                  </option>
+                ))
+              )}
+            </select>
+          )}
+          <p className="text-xs text-gray-500 mt-2">💡 場地資料來自資料庫 VENUE 表</p>
+        </div>
       ) : (
-          <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">自訂地點</label>
-             <input placeholder="例如：總圖 B1 自習室區" className="w-full px-4 py-3 rounded-xl border border-gray-200"/>
-          </div>
+        /* 校外場地：輸入地點名稱 */
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">地點名稱</label>
+          <input 
+            type="text"
+            value={formData.locationName}
+            onChange={(e) => setFormData({...formData, locationName: e.target.value})}
+            placeholder="例如：台大總圖 B1、師大夜市麥當勞" 
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/50 outline-none transition-all"
+          />
+        </div>
       )}
     </div>
   );

@@ -17,13 +17,20 @@ export default function CreateEventWizard() {
     content: '',
     capacity: 4,
     groupId: '',    // FK: GROUP (nullable)
-    needBook: false,
-    venueId: '',    // FK: VENUE
+    isOnCampus: true,  // 是否為校內場地
+    venueId: '',    // FK: VENUE (校內場地)
+    locationName: '', // 校外場地名稱
     date: new Date().toISOString().split('T')[0],
     selectedSlots: [] // Logic for booking
   });
 
   const nextStep = async () => {
+    // Step 1 驗證：必須輸入標題
+    if (currentStep === 1 && !formData.title.trim()) {
+      alert('請輸入活動標題');
+      return;
+    }
+
     if (currentStep < 3) {
       setCurrentStep(c => c + 1);
     } else {
