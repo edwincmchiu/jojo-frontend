@@ -34,11 +34,29 @@ export default function CreateEventWizard() {
     if (currentStep < 3) {
       setCurrentStep(c => c + 1);
     } else {
-      // Submit Logic
       setIsSubmitting(true);
-      await createEvent(formData);
-      setIsSubmitting(false);
-      alert('活動建立成功！\n資料已寫入資料庫。');
+
+      // 1. 建立一個 payload (包裹)，用來轉換資料格式
+      const payload = {
+        ...formData,
+        Group_id: formData.groupId ? parseInt(formData.groupId, 10) : null,
+        
+        // 如果你的後端也需要 Title 大寫，這裡也可以順便修 (視你的後端而定)
+        // Title: formData.title, 
+      };
+
+      console.log("準備送出的 Payload:", payload); // Debug 用，你可以按 F12 看 Console
+
+      try {
+        await createEvent(payload); // ⚠️ 這裡改傳 payload，而不是 formData
+        setIsSubmitting(false);
+        alert('活動建立成功！\n資料已寫入資料庫。');
+      } catch (error) {
+        console.error(error);
+        setIsSubmitting(false);
+        alert('發布失敗，請檢查後端 Console');
+      }
+      // === 修正結束 ===
     }
   };
 

@@ -27,9 +27,9 @@ export default function Step2Audience({ formData, setFormData }) {
           className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white outline-none"
         >
           <option value="">🌏 公開活動 (不限)</option>
-          <option value="g1">💻 資訊工程學系</option>
-          <option value="g2">🏠 男一舍</option>
-          <option value="g3">🧗 登山社</option>
+          <option value="1">💻 資訊工程學系</option>
+          <option value="2">🏠 男一舍</option>
+          <option value="3">🧗 登山社</option>
         </select>
       </div>
     </div>
