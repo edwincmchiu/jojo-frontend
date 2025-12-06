@@ -47,7 +47,11 @@ function App() {
       {/* 主內容區 */}
       <main className="flex-1 overflow-auto">
         {currentTab === 'feed' && <EventFeed />}
-        {currentTab === 'create' && <div className="p-8"><CreateEventWizard /></div>}
+        {currentTab === 'create' && (
+          <div className="p-8">
+            <CreateEventWizard onSuccess={() => setCurrentTab('feed')} />
+          </div>
+        )}
         {currentTab === 'profile' && <UserProfile />}
       </main>
     </div>
