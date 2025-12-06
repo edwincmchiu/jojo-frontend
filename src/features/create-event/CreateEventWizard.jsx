@@ -6,7 +6,7 @@ import Step2Audience from './Step2_Audience';
 import Step3VenueBooking from './Step3_VenueBooking';
 import { createEvent } from '../../api/event';
 
-export default function CreateEventWizard() {
+export default function CreateEventWizard({ onSuccess}) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -56,13 +56,15 @@ export default function CreateEventWizard() {
       try {
         await createEvent(payload); // ⚠️ 這裡改傳 payload，而不是 formData
         setIsSubmitting(false);
-        alert('活動建立成功！\n資料已寫入資料庫。');
+        alert('活動建立成功！\n資料已寫入資料庫。\n注意：系統僅供揪團，未能幫你實際訂借場地，請務必先確定場地可用。');
+        if (onSuccess) {
+          onSuccess();
+        }
       } catch (error) {
         console.error(error);
         setIsSubmitting(false);
         alert('發布失敗，請檢查後端 Console');
       }
-      // === 修正結束 ===
     }
   };
 

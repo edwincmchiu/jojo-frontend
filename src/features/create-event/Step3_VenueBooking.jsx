@@ -11,6 +11,7 @@ export default function Step3VenueBooking({ formData, setFormData }) {
       setLoading(true);
       fetchVenues().then(data => {
         setVenues(data);
+        // 如果還沒選場地且有資料，預設選第一個
         if (!formData.venueId && data.length > 0) {
           setFormData(prev => ({ ...prev, venueId: data[0].id }));
         }
@@ -23,6 +24,7 @@ export default function Step3VenueBooking({ formData, setFormData }) {
     <div className="animate-fade-in space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">何時何地？</h2>
 
+      {/* 日期選擇 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">日期</label>
         <input 
@@ -33,7 +35,7 @@ export default function Step3VenueBooking({ formData, setFormData }) {
         />
       </div>
 
-      {/* 校內/校外選擇 */}
+      {/* 校內/校外切換按鈕 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">場地類型</label>
         <div className="grid grid-cols-2 gap-4">
@@ -67,10 +69,14 @@ export default function Step3VenueBooking({ formData, setFormData }) {
         </div>
       </div>
 
-      {/* 校內場地：顯示場地下拉選單 */}
+      {/* 根據選擇顯示對應輸入框 */}
       {formData.isOnCampus ? (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">選擇校內場地</label>
+          <p className="text-sm text-amber-600 mb-3 font-bold">
+             ⚠️ 注意：本系統僅供揪團媒合，不具備場地借用功能，請務必自行向學校申請。
+          </p>
+          
           {loading ? (
             <div className="text-sm text-gray-500 animate-pulse">載入場地列表...</div>
           ) : (
@@ -90,6 +96,22 @@ export default function Step3VenueBooking({ formData, setFormData }) {
               )}
             </select>
           )}
+
+          {/* 🔥 新增的紅色警示框 (只有在選擇了場地後才顯示) */}
+          {formData.venueId && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start space-x-3 animate-fade-in">
+              <div className="text-2xl">⚠️</div>
+              <div>
+                <h4 className="font-bold text-red-600 mb-1">重要提醒</h4>
+                <p className="text-sm text-red-500 leading-relaxed">
+                  此系統僅協助媒合同學參加活動，<span className="font-bold underline">無法自動向學校借用場地</span>。
+                  <br/>
+                  發布活動前，請您務必先自行向場地管理單位確認借用狀況。
+                </p>
+              </div>
+            </div>
+          )}
+
           <p className="text-xs text-gray-500 mt-2">💡 場地資料來自資料庫 VENUE 表</p>
         </div>
       ) : (

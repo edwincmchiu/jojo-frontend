@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { fetchUserProfile } from '../../api/profile';
 
-export default function UserProfile() {
+export default function UserProfile({userId}) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('joined'); // 'joined' 或 'hosted'
 
   useEffect(() => {
-    fetchUserProfile().then(data => {
-      setUser(data);
-      setLoading(false);
-    });
-  }, []);
+    if (userId){  
+        fetchUserProfile(userId).then(data => {
+        setUser(data);
+        setLoading(false);
+      });}
+  }, [userId]);
 
   if (loading) return <div className="p-10 text-center text-gray-400">載入個人資料...</div>;
 
@@ -99,13 +100,13 @@ export default function UserProfile() {
         </div>
       </div>
       
-      {/* Logout Button */}
+      {/* Logout Button
       <div className="px-6 mt-8">
         <button className="w-full py-3 border border-red-200 text-red-500 rounded-xl font-bold hover:bg-red-50 transition-all">
           登出帳號
         </button>
         <p className="text-center text-xs text-gray-300 mt-4">JoJo v1.0.0 (Build 20251128)</p>
-      </div>
+      </div> */}
 
     </div>
   );
