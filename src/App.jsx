@@ -4,12 +4,19 @@ import CreateEventWizard from './features/create-event/CreateEventWizard';
 import EventFeed from './features/join-event/EventFeed';
 import UserProfile from './features/profile/UserProfile';
 import LoginPage from './features/auth/LoginPage';
+import AdminApp from './features/admin/AdminApp';
 
 function App() {
   const [user, setUser] = useState(null);
   const [currentTab, setCurrentTab] = useState('feed');
+  
   if (!user) {
     return <LoginPage onLogin={(userData) => setUser(userData)} />
+  }
+
+  // 如果是管理者，顯示管理者後台
+  if (user.role === 'admin') {
+    return <AdminApp onLogout={() => setUser(null)} />;
   }
 
 

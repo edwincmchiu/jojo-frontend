@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import AdminLogin from './AdminLogin';
+import { useState } from 'react';
 import AdminLayout from './AdminLayout';
 import Dashboard from './Dashboard';
 import Analytics from './Analytics';
@@ -8,28 +7,17 @@ import GroupManager from './GroupManager';
 import UserManager from './UserManager';
 import EventManager from './EventManager';
 
-export default function AdminApp() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // 檢查是否已經登入
-    const adminId = localStorage.getItem('adminId');
-    if (adminId) {
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
-  };
-
+export default function AdminApp({ onLogout: parentLogout }) {
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    // 清除 localStorage
+    localStorage.removeItem('adminId');
+    localStorage.removeItem('adminName');
+    
+    // 呼叫父層的 logout 函式
+    if (parentLogout) {
+      parentLogout();
+    }
   };
-
-  if (!isLoggedIn) {
-    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
-  }
 
   return (
     <AdminLayout onLogout={handleLogout}>

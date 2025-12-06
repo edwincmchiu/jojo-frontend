@@ -1,18 +1,33 @@
 import { useState } from 'react';
+import { adminLogin } from '../../api/admin';
 
 export default function LoginPage({ onLogin }) {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    // --- 模擬登入 API ---
-    // 這裡之後可以換成真正的 fetch('/api/login')
+    // 模擬載入延遲
     setTimeout(() => {
-      // 假設登入成功，回傳使用者資料
-      // 這裡 ID 寫死為 1，對應你資料庫的趙仲文
+      // 檢查是否為管理者登入（前端驗證，不連後端）
+      if (formData.username === 'admin' && formData.password === 'admin123') {
+        // 管理者登入成功
+        const adminUser = {
+          id: 999,
+          name: '系統管理員',
+          role: 'admin'
+        };
+        
+        setLoading(false);
+        onLogin(adminUser);
+        return;
+      }
+
+      // 一般使用者登入（模擬）
       const mockUser = { 
         id: 1, 
         name: formData.username || '趙仲文', 
@@ -20,8 +35,8 @@ export default function LoginPage({ onLogin }) {
       };
       
       setLoading(false);
-      onLogin(mockUser); // 通知 App.jsx 登入成功
-    }, 1000);
+      onLogin(mockUser);
+    }, 500);
   };
 
   return (
@@ -33,6 +48,13 @@ export default function LoginPage({ onLogin }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 錯誤訊息 */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">帳號 / 學號</label>
             <input
@@ -67,7 +89,8 @@ export default function LoginPage({ onLogin }) {
         </form>
 
         <div className="mt-6 text-center text-xs text-gray-400">
-          <p>Demo 帳號：任意輸入即可登入</p>
+          <p>一般使用者：任意輸入即可登入</p>
+          <p className="mt-1">管理者帳號：admin / admin123</p>
         </div>
       </div>
     </div>
