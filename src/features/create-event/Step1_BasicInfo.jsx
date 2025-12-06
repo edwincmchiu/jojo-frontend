@@ -1,9 +1,9 @@
 const ACTIVITY_TYPES = [
-  { id: 't1', name: '宵夜', icon: '🍜' },
-  { id: 't2', name: '運動', icon: '🏀' },
-  { id: 't3', name: '讀書', icon: '📚' },
-  { id: 't4', name: '出遊', icon: '🚗' },
-  { id: 't5', name: '其他', icon: '✨' }
+  { id: '宵夜', name: '宵夜', icon: '🍜' },
+  { id: '運動', name: '運動', icon: '🏀' },
+  { id: '讀書', name: '讀書', icon: '📚' },
+  { id: '出遊', name: '出遊', icon: '🚗' },
+  { id: '其他', name: '其他', icon: '✨' }
 ];
 
 export default function Step1BasicInfo({ formData, setFormData }) {

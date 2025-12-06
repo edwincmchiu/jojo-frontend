@@ -1,6 +1,6 @@
 // 定義後端 API 的基礎網址
 // ⚠️ 注意：對應你後端 .env 的 PORT=3010
-const API_BASE_URL = '/api'; 
+const API_BASE_URL = 'http://localhost:3010/api'; 
 
 // 1. 取得所有場地 (對應 SELECT * FROM VENUE)
 export const fetchVenues = async () => {
