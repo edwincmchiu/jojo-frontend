@@ -3,9 +3,15 @@ import { useState } from 'react';
 import CreateEventWizard from './features/create-event/CreateEventWizard';
 import EventFeed from './features/join-event/EventFeed';
 import UserProfile from './features/profile/UserProfile';
+import LoginPage from './features/auth/LoginPage';
 
 function App() {
+  const [user, setUser] = useState(null);
   const [currentTab, setCurrentTab] = useState('feed');
+  if (!user) {
+    return <LoginPage onLogin={(userData) => setUser(userData)} />
+  }
+
 
   const navItems = [
     { id: 'feed', icon: '🔍', label: '找活動' },
@@ -19,7 +25,7 @@ function App() {
       <aside className="w-64 bg-brand-dark text-white flex flex-col shadow-xl">
         <div className="p-6 border-b border-gray-700">
           <h1 className="text-2xl font-bold tracking-wider text-brand-yellow">JoJo 揪揪</h1>
-          <p className="text-xs text-gray-400 mt-2">即時媒合校園生活夥伴</p>
+          <p className="text-xs text-gray-400 mt-2">你好, {user.name}! 來揪團吧!</p>
         </div>
         
         <nav className="flex-1 p-4">
@@ -39,8 +45,17 @@ function App() {
           ))}
         </nav>
 
-        <div className="p-6 border-t border-gray-700 text-xs text-gray-400">
-          <p>© 2025 JoJo 揪揪</p>
+          <div className="p-4 border-t border-gray-700">
+          <button 
+            onClick={() => setUser(null)} // 清除 user 就會變回登入頁
+            className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all"
+          >
+            <span>🚪</span>
+            <span>登出</span>
+          </button>
+          <div className="mt-4 text-center text-xs text-gray-600">
+            © 2025 JoJo 揪揪
+          </div>
         </div>
       </aside>
 
@@ -52,7 +67,7 @@ function App() {
             <CreateEventWizard onSuccess={() => setCurrentTab('feed')} />
           </div>
         )}
-        {currentTab === 'profile' && <UserProfile />}
+        {currentTab === 'profile' && <UserProfile userId={user.id} />}
       </main>
     </div>
   );
