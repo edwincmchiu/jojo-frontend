@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetchEventFeed, joinEvent } from '../../api/feed';
+import { fetchEventTypes, fetchGroups } from '../../api/admin';
 
 // 輔助函式 (略，假設已在 feed.js 或 utils 中定義)
 // const getIconByType = (type) => { ... }; 
@@ -15,6 +16,40 @@ export default function EventFeed() {
   const [filterType, setFilterType] = useState('全部');
   const [isRecommend, setIsRecommend] = useState(false);
   const [filterGroup, setFilterGroup] = useState('all');
+
+  // [新增] 動態載入的選項
+  const [activityTypes, setActivityTypes] = useState([{ value: "全部", label: "所有類型" }]);
+  const [groupFilters, setGroupFilters] = useState([{ value: "all", label: "顯示所有活動" }]);
+
+  // [新增] 載入活動類型和群組列表
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const [types, groups] = await Promise.all([
+          fetchEventTypes(),
+          fetchGroups()
+        ]);
+        
+        // 轉換活動類型格式
+        const typeOptions = [
+          { value: "全部", label: "所有類型" },
+          ...types.map(t => ({ value: t.type_name, label: `${t.type_name}` }))
+        ];
+        setActivityTypes(typeOptions);
+        
+        // 轉換群組格式
+        const groupOptions = [
+          { value: "all", label: "顯示所有活動" },
+          ...groups.map(g => ({ value: String(g.group_id), label: `${g.group_name}` }))
+        ];
+        setGroupFilters(groupOptions);
+      } catch (error) {
+        console.error('Failed to load filters:', error);
+      }
+    };
+    
+    loadFilters();
+  }, []);
 
   // [關鍵邏輯] 當篩選條件改變時，重新呼叫後端
   useEffect(() => {
@@ -43,20 +78,6 @@ export default function EventFeed() {
     }
     setJoiningId(null);
   };
-  
-  const activityTypes = [
-    { value: "全部", label: "所有類型" },
-    { value: "運動", label: "🏀 運動" },
-    { value: "讀書", label: "📚 讀書" },
-    { value: "宵夜", label: "🍜 宵夜" },
-    { value: "出遊", label: "🚗 出遊" },
-  ];
-  
-  const groupFilters = [
-    { value: "all", label: "🌏 顯示所有活動" },
-    { value: "1", label: "💻 資訊工程學系 (ID: 1)" },
-    { value: "2", label: "🏠 男一舍 (ID: 2)" },
-  ];
 
   if (loading) return <div className="p-10 text-center text-gray-500">正在載入活動...</div>;
 
@@ -118,19 +139,12 @@ export default function EventFeed() {
           // 渲染邏輯
           const percent = Math.min(100, (ev.currentPeople / ev.capacity) * 100);
           const isFull = ev.currentPeople >= ev.capacity;
-          const getIconByType = (type) => { /* 輔助函式定義 */
-              const map = { '宵夜': '🍜', '運動': '🏀', '讀書': '📚', '出遊': '🚗', '共煮': '🍳', '其他': '✨' };
-              return map[type] || '📅';
-          };
           
           return (
             <div key={ev.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all">
               {/* 卡片 Header */}
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-xl">
-                    {getIconByType(ev.type)}
-                  </div>
                   <div>
                     <h3 className="font-bold text-gray-800 line-clamp-1">{ev.title}</h3>
                     <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
