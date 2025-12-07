@@ -1,18 +1,79 @@
 import { useState, useEffect } from 'react';
 import { fetchUserProfile } from '../../api/profile';
+import axios from 'axios';
 
 export default function UserProfile({userId}) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('joined'); // 'joined' 或 'hosted'
 
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [selectedTag, setSelectedTag] = useState('');
+  // 標準標籤清單 (建議未來從後端 API 獲取，這裡暫時硬編碼)
+  const AVAILABLE_TAGS = ["運動", "讀書", "電影", "宵夜", "戶外", "桌遊", "Coding", "攝影", "音樂", "美食"];
+
+  // 1. 取得使用者資料
   useEffect(() => {
-    if (userId){  
+    if (userId){  
         fetchUserProfile(userId).then(data => {
         setUser(data);
         setLoading(false);
       });}
   }, [userId]);
+  
+  // 2. 新增興趣標籤邏輯
+  const handleAddInterest = async () => {
+    if (!selectedTag || !userId) return; 
+
+    try {
+        const API_URL = '/api'; // 使用 Proxy 轉發
+
+        // 呼叫後端 POST API 寫入資料庫
+        await axios.post(`${API_URL}/users/${userId}/preferences`, {
+            typeName: selectedTag 
+        });
+
+        // 成功後：重設狀態並重新載入資料 (強制更新畫面)
+        setIsAddingTag(false);
+        setSelectedTag('');
+        
+        // 重新執行 useEffect 裡面的 fetch 邏輯
+        fetchUserProfile(userId).then(data => {
+            setUser(data);
+            setLoading(false);
+        });
+
+    } catch (error) {
+        console.error('Error adding preference:', error);
+        alert('新增興趣失敗，請檢查後端連線或資料庫。');
+    }
+  }
+
+  // 3. 移除興趣標籤邏輯
+  const handleRemoveInterest = async (typeNameToRemove) => {
+      if (!userId) return;
+
+      if (!window.confirm(`確定要移除興趣標籤 [${typeNameToRemove}] 嗎？`)) {
+          return;
+      }
+
+      try {
+          const API_URL = '/api'; // Use Proxy
+          
+          // 呼叫後端 DELETE API 刪除資料
+          await axios.delete(`${API_URL}/users/${userId}/preferences/${typeNameToRemove}`);
+
+          // 成功後：刷新資料以更新畫面
+          fetchUserProfile(userId).then(data => {
+              setUser(data);
+              setLoading(false);
+          });
+
+      } catch (error) {
+          console.error('Error removing preference:', error);
+          alert('移除興趣失敗，請檢查後端連線或權限。');
+      }
+  };
 
   if (loading) return <div className="p-10 text-center text-gray-400">載入個人資料...</div>;
 
@@ -39,14 +100,60 @@ export default function UserProfile({userId}) {
 
           {/* 3. 興趣標籤 (PREFERENCE Table) */}
           <div className="flex flex-wrap justify-center gap-2">
+            
+            {/* 顯示已有的興趣標籤 (變成可移除的按鈕) */}
             {user.interests.map((tag, idx) => (
-              <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
-                {tag}
-              </span>
+                <button
+                    key={idx}
+                    onClick={() => handleRemoveInterest(tag)} // 呼叫移除 API
+                    className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs flex items-center gap-1 font-medium hover:bg-red-100 hover:text-red-600 transition-colors"
+                >
+                    {tag}
+                    <span className="text-sm">×</span> {/* 刪除圖示 */}
+                </button>
             ))}
-            <button className="px-3 py-1 border border-dashed border-gray-300 text-gray-400 rounded-lg text-xs hover:bg-gray-50">
-              + 新增
-            </button>
+            
+            {/* 關鍵的條件渲染邏輯：新增標籤選單 */}
+            {isAddingTag ? (
+              <div className="flex gap-2 items-center">
+                <select
+                  value={selectedTag}
+                  onChange={(e) => setSelectedTag(e.target.value)}
+                  className="px-2 py-1 rounded-lg text-xs border focus:border-brand-yellow"
+                >
+                  <option value="">選擇興趣...</option>
+                  {AVAILABLE_TAGS
+                      .filter(tag => !user.interests.includes(tag))
+                      .map(tag => (
+                          <option key={tag} value={tag}>{tag}</option>
+                  ))}
+                </select>
+                
+                {/* 儲存按鈕 */}
+                <button 
+                  onClick={handleAddInterest} 
+                  disabled={!selectedTag} 
+                  className="px-2 py-1 bg-brand-yellow text-brand-dark rounded-lg text-xs font-bold disabled:opacity-50"
+                >
+                  儲存
+                </button>
+                
+                <button 
+                  onClick={() => setIsAddingTag(false)}
+                  className="px-2 py-1 text-gray-500 rounded-lg text-xs"
+                >
+                  取消
+                </button>
+              </div>
+            ) : (
+              // 否則顯示原本的 +新增按鈕
+              <button 
+                onClick={() => setIsAddingTag(true)} 
+                className="px-3 py-1 border border-dashed border-gray-300 text-gray-400 rounded-lg text-xs hover:bg-gray-50"
+              >
+                + 新增
+              </button>
+            )}
           </div>
         </div>
       </div>
