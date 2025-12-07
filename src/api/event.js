@@ -7,9 +7,10 @@ const API_BASE_URL = '/api';
 // 2. (如果有借場地) INSERT INTO VENUE_BOOKING
 // 3. INSERT INTO JOIN_RECORD (主辦人自己加入)
 
-export const createEvent = async (eventData) => {
+export const createEvent = async (eventData, userId) => {
   try {
-    console.log('[API] Sending data to backend:', eventData);
+    const dataWithUserId = { ...eventData, userId };
+    console.log('[API] Sending data to backend:', dataWithUserId);
 
     // 發送 POST 請求
     const response = await fetch(`${API_BASE_URL}/events`, {
@@ -17,7 +18,7 @@ export const createEvent = async (eventData) => {
       headers: {
         'Content-Type': 'application/json', // 告訴後端我們傳的是 JSON
       },
-      body: JSON.stringify(eventData) // 把前端的物件轉成 JSON 字串
+      body: JSON.stringify(dataWithUserId) // 把前端的物件轉成 JSON 字串
     });
 
     // 檢查 HTTP 狀態碼 (200-299 代表成功)

@@ -6,7 +6,7 @@ import Step2Audience from './Step2_Audience';
 import Step3VenueBooking from './Step3_VenueBooking';
 import { createEvent } from '../../api/event';
 
-export default function CreateEventWizard({ onSuccess}) {
+export default function CreateEventWizard({ user, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -21,7 +21,8 @@ export default function CreateEventWizard({ onSuccess}) {
     venueId: '',    // FK: VENUE (校內場地)
     locationName: '', // 校外場地名稱
     date: new Date().toISOString().split('T')[0],
-    selectedSlots: [] // Logic for booking
+    startTime: '',  // 開始時間 (HH:mm)
+    endTime: '',    // 結束時間 (HH:mm)
   });
 
   const nextStep = async () => {
@@ -40,21 +41,40 @@ export default function CreateEventWizard({ onSuccess}) {
     if (currentStep < 3) {
       setCurrentStep(c => c + 1);
     } else {
+      // Step 3 驗證：必須輸入時間
+      if (!formData.startTime || !formData.endTime) {
+        alert('請輸入開始和結束時間');
+        return;
+      }
+      
+      // 驗證結束時間必須大於開始時間
+      if (formData.endTime <= formData.startTime) {
+        alert('結束時間必須大於開始時間');
+        return;
+      }
+      
       setIsSubmitting(true);
 
-      // 1. 建立一個 payload (包裹)，用來轉換資料格式
+      // 1. 建立 payload，組合日期和時間成 TIMESTAMP 格式
+      const startTime = `${formData.date} ${formData.startTime}:00`; // 'YYYY-MM-DD HH:mm:00'
+      const endTime = `${formData.date} ${formData.endTime}:00`;
+      
       const payload = {
-        ...formData,
+        title: formData.title,
+        typeId: formData.typeId,
+        content: formData.content,
+        capacity: formData.capacity,
+        startTime: startTime,
+        endTime: endTime,
         Group_id: formData.groupId ? parseInt(formData.groupId, 10) : null,
-        
-        // 如果你的後端也需要 Title 大寫，這裡也可以順便修 (視你的後端而定)
-        // Title: formData.title, 
+        locationName: formData.isOnCampus ? null : formData.locationName,
+        venueId: formData.isOnCampus ? formData.venueId : null,
       };
 
-      console.log("準備送出的 Payload:", payload); // Debug 用，你可以按 F12 看 Console
+      console.log("準備送出的 Payload:", payload);
 
       try {
-        await createEvent(payload); // ⚠️ 這裡改傳 payload，而不是 formData
+        await createEvent(payload, user.id); // 傳送 payload 和 user.id
         setIsSubmitting(false);
         alert('活動建立成功！\n資料已寫入資料庫。\n注意：系統僅供揪團，未能幫你實際訂借場地，請務必先確定場地可用。');
         if (onSuccess) {

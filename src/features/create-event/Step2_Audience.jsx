@@ -1,4 +1,20 @@
+import { useState, useEffect } from 'react';
+import { fetchGroups } from '../../api/admin';
+
 export default function Step2Audience({ formData, setFormData }) {
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGroups().then(data => {
+      setGroups(data);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Failed to load groups:', err);
+      setLoading(false);
+    });
+  }, []);
+
   const adjustCapacity = (delta) => {
     setFormData(prev => ({
         ...prev,
@@ -25,11 +41,14 @@ export default function Step2Audience({ formData, setFormData }) {
           value={formData.groupId || ''}
           onChange={(e) => setFormData({...formData, groupId: e.target.value})}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white outline-none"
+          disabled={loading}
         >
-          <option value="">🌏 公開活動 (不限)</option>
-          <option value="1">💻 資訊工程學系</option>
-          <option value="2">🏠 男一舍</option>
-          <option value="3">🧗 登山社</option>
+          <option value="">公開活動 (不限)</option>
+          {groups.map(group => (
+            <option key={group.group_id} value={group.group_id}>
+              {group.group_name}
+            </option>
+          ))}
         </select>
       </div>
     </div>

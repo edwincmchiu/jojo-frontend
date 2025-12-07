@@ -71,7 +71,7 @@ function App() {
         {currentTab === 'feed' && <EventFeed />}
         {currentTab === 'create' && (
           <div className="p-8">
-            <CreateEventWizard onSuccess={() => setCurrentTab('feed')} />
+            <CreateEventWizard user={user} onSuccess={() => setCurrentTab('feed')} />
           </div>
         )}
         {currentTab === 'profile' && <UserProfile userId={user.id} />}

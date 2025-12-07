@@ -1,12 +1,20 @@
-const ACTIVITY_TYPES = [
-  { id: '宵夜', name: '宵夜', icon: '🍜' },
-  { id: '運動', name: '運動', icon: '🏀' },
-  { id: '讀書', name: '讀書', icon: '📚' },
-  { id: '出遊', name: '出遊', icon: '🚗' },
-  { id: '其他', name: '其他', icon: '✨' }
-];
+import { useState, useEffect } from 'react';
+import { fetchEventTypes } from '../../api/admin';
 
 export default function Step1BasicInfo({ formData, setFormData }) {
+  const [activityTypes, setActivityTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEventTypes().then(types => {
+      setActivityTypes(types.map(t => ({ id: t.type_name, name: t.type_name })));
+      setLoading(false);
+    }).catch(err => {
+      console.error('Failed to load event types:', err);
+      setLoading(false);
+    });
+  }, []);
+
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   return (
@@ -35,16 +43,19 @@ export default function Step1BasicInfo({ formData, setFormData }) {
           活動類型
         </label>
         <div className="grid grid-cols-2 gap-3">
-          {ACTIVITY_TYPES.map(type => (
-            <div 
-              key={type.id}
-              onClick={() => setFormData({...formData, typeId: type.id})}
-              className={`border rounded-xl p-3 flex flex-col items-center cursor-pointer transition-all ${formData.typeId === type.id ? 'ring-2 ring-brand-yellow bg-yellow-50 border-brand-yellow' : 'border-gray-200 hover:bg-gray-50'}`}
-            >
-              <span className="text-2xl mb-1">{type.icon}</span>
-              <span className="text-sm font-medium text-gray-700">{type.name}</span>
-            </div>
-          ))}
+          {loading ? (
+            <div className="col-span-2 text-center text-gray-400 py-4">載入中...</div>
+          ) : (
+            activityTypes.map(type => (
+              <div 
+                key={type.id}
+                onClick={() => setFormData({...formData, typeId: type.id})}
+                className={`border rounded-xl p-3 flex items-center justify-center cursor-pointer transition-all ${formData.typeId === type.id ? 'ring-2 ring-brand-yellow bg-yellow-50 border-brand-yellow' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                <span className="text-sm font-medium text-gray-700">{type.name}</span>
+              </div>
+            ))
+          )}
         </div>
         {!formData.typeId && (
           <p className="text-xs text-gray-400 mt-2">請選擇活動類型才能繼續</p>

@@ -35,6 +35,28 @@ export default function Step3VenueBooking({ formData, setFormData }) {
         />
       </div>
 
+      {/* 時間選擇 */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">開始時間</label>
+          <input 
+            type="time" 
+            value={formData.startTime || ''}
+            onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/50 outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">結束時間</label>
+          <input 
+            type="time" 
+            value={formData.endTime || ''}
+            onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/50 outline-none transition-all"
+          />
+        </div>
+      </div>
+
       {/* 校內/校外切換按鈕 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">場地類型</label>
