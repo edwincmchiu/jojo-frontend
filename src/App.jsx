@@ -1,17 +1,70 @@
 // src/App.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import CreateEventWizard from './features/create-event/CreateEventWizard';
 import EventFeed from './features/join-event/EventFeed';
 import UserProfile from './features/profile/UserProfile';
 import LoginPage from './features/auth/LoginPage';
+import RegisterPage from './features/auth/RegisterPage';
 import AdminApp from './features/admin/AdminApp';
 
 function App() {
   const [user, setUser] = useState(null);
   const [currentTab, setCurrentTab] = useState('feed');
-  
+  const [loading, setLoading] = useState(true);
+
+  // 從 localStorage 恢復 session
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (err) {
+        console.error('Failed to parse saved user:', err);
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-xl text-gray-600">載入中...</div>
+      </div>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={
+          user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />
+        } />
+        <Route path="/register" element={
+          user ? <Navigate to="/" /> : <RegisterPage />
+        } />
+        <Route path="/*" element={
+          user ? <MainApp user={user} onLogout={handleLogout} currentTab={currentTab} setCurrentTab={setCurrentTab} /> : <Navigate to="/login" />
+        } />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function MainApp({ user, onLogout, currentTab, setCurrentTab }) {
   if (!user) {
-    return <LoginPage onLogin={(userData) => setUser(userData)} />
+    return null;
   }
 
   // 如果是管理者，顯示管理者後台
@@ -54,7 +107,7 @@ function App() {
 
           <div className="p-4 border-t border-gray-700">
           <button 
-            onClick={() => setUser(null)} // 清除 user 就會變回登入頁
+            onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all"
           >
             <span>🚪</span>
