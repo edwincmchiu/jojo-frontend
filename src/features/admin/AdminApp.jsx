@@ -7,15 +7,11 @@ import GroupManager from './GroupManager';
 import UserManager from './UserManager';
 import EventManager from './EventManager';
 
-export default function AdminApp({ onLogout: parentLogout }) {
+export default function AdminApp({ onLogout }) {
   const handleLogout = () => {
-    // 清除 localStorage
-    localStorage.removeItem('adminId');
-    localStorage.removeItem('adminName');
-    
-    // 呼叫父層的 logout 函式
-    if (parentLogout) {
-      parentLogout();
+    localStorage.removeItem('user');
+    if (onLogout) {
+      onLogout();
     }
   };
 

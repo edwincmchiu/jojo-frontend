@@ -90,6 +90,14 @@ export default function LoginPage({ onLogin }) {
           >
             註冊新帳號
           </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/admin/login')}
+            className="w-full bg-gray-800 text-gray-200 py-3 rounded-xl font-medium hover:bg-gray-700 transition-all"
+          >
+            🔒 管理者登入
+          </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">

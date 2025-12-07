@@ -98,7 +98,7 @@ export default function CreateEventWizard({ user, onSuccess }) {
 
       <div className="flex-1 p-6 overflow-y-auto">
         {currentStep === 1 && <Step1BasicInfo formData={formData} setFormData={setFormData} />}
-        {currentStep === 2 && <Step2Audience formData={formData} setFormData={setFormData} />}
+        {currentStep === 2 && <Step2Audience formData={formData} setFormData={setFormData} userId={user.id} />}
         {currentStep === 3 && <Step3VenueBooking formData={formData} setFormData={setFormData} />}
       </div>
 

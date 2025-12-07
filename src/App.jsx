@@ -6,6 +6,8 @@ import EventFeed from './features/join-event/EventFeed';
 import UserProfile from './features/profile/UserProfile';
 import LoginPage from './features/auth/LoginPage';
 import RegisterPage from './features/auth/RegisterPage';
+import AdminLoginPage from './features/admin/AdminLoginPage';
+import AdminRegisterPage from './features/admin/AdminRegisterPage';
 import AdminApp from './features/admin/AdminApp';
 
 function App() {
@@ -54,6 +56,12 @@ function App() {
         <Route path="/register" element={
           user ? <Navigate to="/" /> : <RegisterPage />
         } />
+        <Route path="/admin/login" element={
+          user ? <Navigate to="/" /> : <AdminLoginPage onLogin={handleLogin} />
+        } />
+        <Route path="/admin/register" element={
+          user ? <Navigate to="/" /> : <AdminRegisterPage />
+        } />
         <Route path="/*" element={
           user ? <MainApp user={user} onLogout={handleLogout} currentTab={currentTab} setCurrentTab={setCurrentTab} /> : <Navigate to="/login" />
         } />
@@ -69,7 +77,7 @@ function MainApp({ user, onLogout, currentTab, setCurrentTab }) {
 
   // 如果是管理者，顯示管理者後台
   if (user.role === 'admin') {
-    return <AdminApp onLogout={() => setUser(null)} />;
+    return <AdminApp onLogout={onLogout} />;
   }
 
 

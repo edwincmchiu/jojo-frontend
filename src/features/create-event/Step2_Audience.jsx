@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react';
-import { fetchGroups } from '../../api/admin';
 
-export default function Step2Audience({ formData, setFormData }) {
+export default function Step2Audience({ formData, setFormData, userId }) {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchGroups().then(data => {
-      setGroups(data);
+    if (!userId) {
       setLoading(false);
-    }).catch(err => {
-      console.error('Failed to load groups:', err);
-      setLoading(false);
-    });
-  }, []);
+      return;
+    }
+    
+    fetch(`/api/users/${userId}/groups`)
+      .then(res => res.json())
+      .then(data => {
+        setGroups(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load groups:', err);
+        setLoading(false);
+      });
+  }, [userId]);
 
   const adjustCapacity = (delta) => {
     setFormData(prev => ({
