@@ -9,6 +9,7 @@ export default function UserProfile({ userId }) {
 
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [selectedTag, setSelectedTag] = useState('');
+  const [isAddingGroup, setIsAddingGroup] = useState(false);
   // 標準標籤清單 (建議未來從後端 API 獲取，這裡暫時硬編碼)
   const AVAILABLE_TAGS = ["運動", "讀書", "電影", "宵夜", "戶外", "桌遊", "Coding", "攝影", "音樂", "美食"];
 

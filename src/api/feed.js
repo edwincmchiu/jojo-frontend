@@ -48,7 +48,7 @@ export const fetchEventFeed = async (filters = {}) => {
     return dbEvents.map(ev => ({
       id: ev.event_id ?? ev.Event_id ?? ev.id,
       title: ev.title ?? ev.Title ?? ev.name ?? ev.title,
-      description: ev.content_preview ?? ev.content ?? ev.Description ?? ev.description,
+      description: ev.content_preview ?? ev.content ?? ev.Description ?? ev.description ?? '',
       type: ev.type_name ?? ev.Type ?? ev.type,
       startTime: ev.start_time ?? ev.Start_time ?? ev.startTime ?? ev.start,
       capacity: ev.capacity ?? ev.Capacity ?? null,
@@ -62,28 +62,36 @@ export const fetchEventFeed = async (filters = {}) => {
   }
 };
 
+// helper: get current user id from localStorage (adjust key if your app uses different key)
+const getCurrentUserId = () => {
+  try {
+    const raw = localStorage.getItem('user') || localStorage.getItem('AUTH_USER') || localStorage.getItem('currentUser');
+    if (!raw) return null;
+    const u = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return u?.id ?? u?.user_id ?? u?.userId ?? null;
+  } catch {
+    return null;
+  }
+};
+
 // 2. 加入活動 (POST /events/:id/join)
 export const joinEvent = async (eventId) => {
+  const userId = getCurrentUserId();
+  if (!userId) {
+    // ensure caller sees a thrown error so UI can show proper message
+    throw new Error('請先登入');
+  }
+
   try {
-    const currentUserId = 1; 
-
-    const response = await fetch(`${API_BASE_URL}/events/${eventId}/join`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUserId })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      // 拋出後端回傳的錯誤訊息 (例如：你已經報名過這個活動囉！)
-      throw new Error(errData.error || 'Join failed'); 
-    }
-
-    return { success: true };
-
-  } catch (error) {
-    console.error("[API] 加入活動失敗:", error);
-    alert(error.message); 
-    return { success: false };
+    const res = await axios.post(`${API_URL}/events/${eventId}/join`, { userId });
+    // normalize response to always either return { success: true } or throw
+    if (res?.data?.success) return res.data;
+    // if backend returns success:false, throw with message if available
+    const errMsg = res?.data?.error || res?.data?.message || '加入活動失敗';
+    throw new Error(errMsg);
+  } catch (err) {
+    // prefer backend message when present
+    const backendMsg = err?.response?.data?.error || err?.response?.data?.message;
+    throw new Error(backendMsg || err.message || '加入活動失敗');
   }
 };
