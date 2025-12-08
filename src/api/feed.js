@@ -1,7 +1,9 @@
 // src/api/feed.js
-
-// 對應後端 .env 的 PORT=3010
-const API_BASE_URL = '/api';
+import axios from 'axios';
+// Use backend host directly in dev to avoid Vite proxy issues
+const API_URL = import.meta.env.DEV ? 'http://localhost:3010/api' : '/api';
+// API_BASE_URL is kept for fetch-based calls
+const API_BASE_URL = API_URL;
 
 // 輔助函式：根據活動類型給對應的 Icon
 const getIconByType = (type) => {
@@ -31,27 +33,28 @@ export const fetchEventFeed = async (filters = {}) => {
     if (filters.group) params.append('group', filters.group);
     if (filters.recommend) params.append('recommend', filters.recommend);
 
-    const response = await axios.get(`${API_URL}/events/feed?${params}`);
-    const data = response.data;
-
-    // Normalize response: backend may return { events: [...] } or just [...]
-    const dbEvents = Array.isArray(data) ? data : (data?.events || data?.data || []);
-
-    if (!Array.isArray(dbEvents)) {
-      console.warn('[API] Response is not an array, returning empty:', data);
-      return [];
-    }
-
+    // Backend exposes /api/events (not /api/events/feed) — call that and include query params if any.
+    const url = `${API_URL}/events${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await axios.get(url);
+     const data = response.data;
+ 
+     // Normalize response: accept array or { events: [...] }
+     const dbEvents = Array.isArray(data) ? data : (data?.events || data?.data || []);
+     if (!Array.isArray(dbEvents)) {
+       console.warn('[API] /events/feed returned non-array:', data);
+       return [];
+     }
+ 
     return dbEvents.map(ev => ({
-      id: ev.Event_id ?? ev.id,
-      title: ev.Title ?? ev.title,
-      description: ev.Description ?? ev.description,
-      type: ev.Type ?? ev.type,
-      startTime: ev.Start_time ?? ev.startTime,
-      capacity: ev.Capacity ?? ev.capacity,
-      currentPeople: ev.Current_people ?? ev.currentPeople ?? 0,
-      hostId: ev.Host_id ?? ev.hostId,
-      hostName: ev.Host_name ?? ev.hostName ?? 'Unknown',
+      id: ev.event_id ?? ev.Event_id ?? ev.id,
+      title: ev.title ?? ev.Title ?? ev.name ?? ev.title,
+      description: ev.content_preview ?? ev.content ?? ev.Description ?? ev.description,
+      type: ev.type_name ?? ev.Type ?? ev.type,
+      startTime: ev.start_time ?? ev.Start_time ?? ev.startTime ?? ev.start,
+      capacity: ev.capacity ?? ev.Capacity ?? null,
+      currentPeople: ev.currentPeople ?? ev.current_people ?? ev.Current_people ?? ev.currentPeople ?? 0,
+      hostId: ev.owner_id ?? ev.Owner_id ?? ev.hostId ?? ev.host_id,
+      hostName: ev.owner_name ?? ev.Host_name ?? ev.hostName ?? 'Unknown',
     }));
   } catch (error) {
     console.error('[API] 取得活動列表失敗:', error);
