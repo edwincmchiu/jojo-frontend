@@ -112,7 +112,7 @@ export default function Step3VenueBooking({ formData, setFormData }) {
               ) : (
                 venues.map(v => (
                   <option key={v.id} value={v.id}>
-                    {v.name} (容納 {v.capacity} 人)
+                    {v.name} ({v.location})
                   </option>
                 ))
               )}

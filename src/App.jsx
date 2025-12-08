@@ -15,7 +15,7 @@ function App() {
   const [currentTab, setCurrentTab] = useState('feed');
   const [loading, setLoading] = useState(true);
 
-  // 從 localStorage 恢復 session
+  // 初始化：從 localStorage 恢復登入狀態（支援頁面重新整理）
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -31,6 +31,7 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    // 儲存到 localStorage，支援頁面重新整理後保持登入
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
