@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchUserProfile } from '../../api/profile';
+import { fetchUserProfile, addPreference, removePreference } from '../../api/profile';
 import axios from 'axios';
 
 export default function UserProfile({userId}) {
@@ -23,56 +23,34 @@ export default function UserProfile({userId}) {
   
   // 2. 新增興趣標籤邏輯
   const handleAddInterest = async () => {
-    if (!selectedTag || !userId) return; 
-
+    if (!selectedTag) return;
     try {
-        const API_URL = '/api'; // 使用 Proxy 轉發
-
-        // 呼叫後端 POST API 寫入資料庫
-        await axios.post(`${API_URL}/users/${userId}/preferences`, {
-            typeName: selectedTag 
-        });
-
-        // 成功後：重設狀態並重新載入資料 (強制更新畫面)
-        setIsAddingTag(false);
-        setSelectedTag('');
-        
-        // 重新執行 useEffect 裡面的 fetch 邏輯
-        fetchUserProfile(userId).then(data => {
-            setUser(data);
-            setLoading(false);
-        });
-
-    } catch (error) {
-        console.error('Error adding preference:', error);
-        alert('新增興趣失敗，請檢查後端連線或資料庫。');
+      await addPreference(user.id, selectedTag);
+      setUser(prev => ({
+        ...prev,
+        interests: Array.from(new Set([...(prev?.interests || []), selectedTag]))
+      }));
+      setSelectedTag('');
+      setIsAddingTag(false);
+    } catch (err) {
+      console.error('Error adding preference: ', err);
     }
   }
 
   // 3. 移除興趣標籤邏輯
   const handleRemoveInterest = async (typeNameToRemove) => {
-      if (!userId) return;
-
-      if (!window.confirm(`確定要移除興趣標籤 [${typeNameToRemove}] 嗎？`)) {
-          return;
-      }
-
-      try {
-          const API_URL = '/api'; // Use Proxy
-          
-          // 呼叫後端 DELETE API 刪除資料
-          await axios.delete(`${API_URL}/users/${userId}/preferences/${typeNameToRemove}`);
-
-          // 成功後：刷新資料以更新畫面
-          fetchUserProfile(userId).then(data => {
-              setUser(data);
-              setLoading(false);
-          });
-
-      } catch (error) {
-          console.error('Error removing preference:', error);
-          alert('移除興趣失敗，請檢查後端連線或權限。');
-      }
+    try {
+      await removePreference(user.id, typeNameToRemove);
+      setUser(prev => ({
+        ...prev,
+        interests: (prev?.interests || []).filter(i => {
+          const name = typeof i === 'string' ? i : (i?.Type_name ?? i?.type_name ?? i?.name);
+          return name !== typeNameToRemove;
+        })
+      }));
+    } catch (err) {
+      console.error('remove interest failed', err);
+    }
   };
 
   if (loading) return <div className="p-10 text-center text-gray-400">載入個人資料...</div>;
@@ -102,16 +80,21 @@ export default function UserProfile({userId}) {
           <div className="flex flex-wrap justify-center gap-2">
             
             {/* 顯示已有的興趣標籤 (變成可移除的按鈕) */}
-            {user.interests.map((tag, idx) => (
-                <button
-                    key={idx}
-                    onClick={() => handleRemoveInterest(tag)} // 呼叫移除 API
-                    className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs flex items-center gap-1 font-medium hover:bg-red-100 hover:text-red-600 transition-colors"
+            {user?.interests?.map((interest, idx) => {
+              const label = typeof interest === 'string'
+                ? interest
+                : (interest?.Type_name ?? interest?.type_name ?? interest?.name ?? `interest-${idx}`);
+              return (
+                <span
+                  key={`${label}-${idx}`}
+                  onClick={() => handleRemoveInterest(label)}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs flex items-center gap-1 font-medium hover:bg-red-100 hover:text-red-600 transition-colors cursor-pointer"
                 >
-                    {tag}
-                    <span className="text-sm">×</span> {/* 刪除圖示 */}
-                </button>
-            ))}
+                  {label}
+                  <span className="text-sm">×</span>
+                </span>
+              );
+            })}
             
             {/* 關鍵的條件渲染邏輯：新增標籤選單 */}
             {isAddingTag ? (
@@ -180,22 +163,14 @@ export default function UserProfile({userId}) {
 
         {/* List Content */}
         <div className="space-y-3">
-          {(activeTab === 'joined' ? user.joinedEvents : user.hostedEvents).map(ev => (
-            <div key={ev.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          {(activeTab === 'joined' ? user.joinedEvents : user.hostedEvents)?.map((ev) => (
+            <div key={ev?.id ?? `event-${Math.random()}`} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
               <div>
                 <h4 className="font-bold text-gray-800">{ev.title}</h4>
-                <div className="text-xs text-gray-500 mt-1 flex gap-3">
-                  <span>📅 {ev.date}</span>
-                  <span>👥 {ev.count} 人</span>
+                <div className="text-xs text-gray-500 mt-1">
+                  <span>📅 {ev.startTime}</span>
                 </div>
               </div>
-              <span className={`px-2 py-1 rounded text-xs font-bold ${
-                ev.status === 'Open' ? 'bg-green-100 text-green-600' :
-                ev.status === 'Closed' ? 'bg-gray-100 text-gray-500' :
-                'bg-red-50 text-red-500'
-              }`}>
-                {ev.status === 'Open' ? '進行中' : ev.status === 'Closed' ? '已結束' : '已取消'}
-              </span>
             </div>
           ))}
 
