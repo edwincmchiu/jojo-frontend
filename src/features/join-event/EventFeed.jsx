@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { fetchEventFeed, joinEvent } from '../../api/feed';
 import { fetchEventTypes, fetchGroups } from '../../api/admin';
+import { trackClick } from '../../api/track';
 
 // 輔助函式 (略，假設已在 feed.js 或 utils 中定義)
 // const getIconByType = (type) => { ... }; 
@@ -70,6 +71,23 @@ export default function EventFeed() {
     }
   }, [showRecommend, filterType, filterGroup]);
 
+  const handleRecommendToggle = async () => {
+    const nextState = !showRecommend;
+    setShowRecommend(nextState);
+
+    // Only track when the user turns ON the recommendation
+    if (nextState) {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user && user.id) {
+                await trackClick({ userId: user.id });
+            }
+        } catch (error) {
+            console.error('Failed to track click:', error);
+        }
+    }
+  };
+
   const handleJoin = async (id) => {
     if(!window.confirm('確定要報名這個活動嗎？')) return;
     
@@ -130,7 +148,7 @@ export default function EventFeed() {
               <p className="text-xs text-gray-600 mt-1">根據你的群組和興趣推薦活動</p>
             </div>
             <button 
-              onClick={() => setShowRecommend(!showRecommend)}
+              onClick={handleRecommendToggle}
               className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
                 showRecommend 
                 ? 'bg-brand-yellow text-brand-dark border-2 border-yellow-400' 
