@@ -275,3 +275,14 @@ export const fetchTopHosts = async () => {
     return [];
   }
 };
+
+export const fetchClickEvents = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/analytics/click-events`);
+    if (!response.ok) throw new Error('Failed to fetch click events');
+    return await response.json();
+  } catch (error) {
+    console.error('[API] Fetch click events failed:', error);
+    return [];
+  }
+};

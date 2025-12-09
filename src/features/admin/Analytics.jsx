@@ -7,7 +7,8 @@ import {
   fetchEventsByType,
   fetchGroupParticipation,
   fetchUserActivity,
-  fetchCapacityStats
+  fetchCapacityStats,
+  fetchClickEvents
 } from '../../api/admin';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
@@ -17,6 +18,7 @@ export default function Analytics() {
   const [groupData, setGroupData] = useState([]);
   const [activityData, setActivityData] = useState([]);
   const [capacityData, setCapacityData] = useState([]);
+  const [clickEventsData, setClickEventsData] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // 日期篩選
@@ -30,17 +32,19 @@ export default function Analytics() {
 
   const loadData = async () => {
     setLoading(true);
-    const [types, groups, activity, capacity] = await Promise.all([
+    const [types, groups, activity, capacity, clicks] = await Promise.all([
       fetchEventsByType(startDate, endDate),
       fetchGroupParticipation(),
       fetchUserActivity(activityDays),
-      fetchCapacityStats()
+      fetchCapacityStats(),
+      fetchClickEvents()
     ]);
     
     setEventsByType(types);
     setGroupData(groups);
     setActivityData(activity);
     setCapacityData(capacity);
+    setClickEventsData(clicks);
     setLoading(false);
   };
 
@@ -231,6 +235,42 @@ export default function Analytics() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+
+        {/* 使用者點擊推薦數量趨勢 - 折線圖 */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">🖱️ 使用者點擊推薦次數趨勢（最近 30 天）</h3>
+          {clickEventsData.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">暫無資料</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={clickEventsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                />
+                <YAxis />
+                <Tooltip 
+                  labelFormatter={(value) => {
+                    const date = new Date(value);
+                    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="clicks" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                  name="點擊次數"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           )}
         </div>
 
