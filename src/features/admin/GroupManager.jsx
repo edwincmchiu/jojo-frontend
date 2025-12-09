@@ -101,12 +101,12 @@ export default function GroupManager() {
                     <span>📅 {group.event_count} 個活動</span>
                   </div>
                 </div>
-                <button
+                {/* <button
                   onClick={() => handleDelete(group.group_id, group.name)}
                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition"
                 >
                   刪除
-                </button>
+                </button> */}
               </div>
             </div>
           ))}
