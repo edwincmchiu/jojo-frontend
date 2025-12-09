@@ -94,11 +94,14 @@ export default function EventTypeManager() {
                   {type.event_count} 個活動使用此類型
                 </p>
               </div>
-              <button
-                onClick={() => handleDelete(type.type_name)}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition">
-                刪除
-              </button>
+              {false && (
+                <button
+                  onClick={() => handleDelete(type.id)}
+                  className="px-2 py-1 text-sm bg-red-500 text-white rounded"
+                >
+                  刪除
+                </button>
+              )}
             </div>
           ))}
 
