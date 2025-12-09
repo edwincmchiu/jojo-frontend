@@ -1,16 +1,38 @@
-# React + Vite
+# Jojo Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The Jojo Frontend is a web application built using [Vite](https://vitejs.dev/) and [React](https://reactjs.org/). It serves as the user interface for the Jojo project.
 
-Currently, two official plugins are available:
+It assumes the backend services are running on `localhost:3010`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting Started
 
-## React Compiler
+Follow these instructions to set up, run, and build the project.
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+### Installation
 
-## Expanding the ESLint configuration
+To install the project dependencies, navigate to the project root and run:
+```bash
+npm ci
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Development
+
+To start the development server with hot-module replacement, run:
+```bash
+pnpm run dev
+```
+This will typically start the application on `http://localhost:5173`.
+
+### Build and Deployment
+
+To create a production-ready build of the application, run:
+```bash
+npm run build
+```
+This command bundles the application for production to the `dist` directory.
+
+You can preview the production build locally using:
+```bash
+npm run preview
+```
+For deployment, the contents of the `dist` directory should be served by a web server.
