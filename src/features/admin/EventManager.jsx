@@ -6,6 +6,8 @@ export default function EventManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 100;
 
   useEffect(() => {
     loadEvents();
@@ -38,16 +40,29 @@ export default function EventManager() {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   };
 
-  // 取得所有活動類型
-  const allTypes = ['all', ...new Set(events.map(e => e.Type_name))];
+  const allTypes = ['all', ...new Set(events.map(e => e.type_name))];
 
-  // 篩選活動
   const filteredEvents = events.filter(event => {
-    const matchSearch = event.Title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       event.Content?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType = filterType === 'all' || event.Type_name === filterType;
+    const matchSearch = event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       event.content?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchType = filterType === 'all' || event.type_name === filterType;
     return matchSearch && matchType;
   });
+
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const endIndex = startIndex + eventsPerPage;
+  const currentEvents = filteredEvents.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType]);
 
   if (loading) {
     return <div className="text-center py-10 text-gray-500">載入中...</div>;
@@ -95,13 +110,13 @@ export default function EventManager() {
           </div>
           <div>
             <div className="text-3xl font-bold text-gray-800">
-              {events.filter(e => e.Group_id).length}
+              {events.filter(e => e.group_id).length}
             </div>
             <div className="text-sm text-gray-500 mt-1">限定群組活動</div>
           </div>
           <div>
             <div className="text-3xl font-bold text-gray-800">
-              {new Set(events.map(e => e.Type_name)).size}
+              {new Set(events.map(e => e.type_name)).size}
             </div>
             <div className="text-sm text-gray-500 mt-1">活動類型數</div>
           </div>
@@ -111,40 +126,68 @@ export default function EventManager() {
       {/* 列表區域 */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">活動列表</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            顯示 {filteredEvents.length} / {events.length} 個活動
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">活動列表</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                顯示 {startIndex + 1}-{Math.min(endIndex, filteredEvents.length)} / {filteredEvents.length} 個活動 (第 {currentPage}/{totalPages} 頁)
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                ← 上一頁
+              </button>
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                下一頁 →
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="divide-y divide-gray-200">
-          {filteredEvents.map((event) => (
-            <div key={event.Event_id} className="p-6 hover:bg-gray-50 transition">
+          {currentEvents.map((event) => (
+            <div key={event.event_id} className="p-6 hover:bg-gray-50 transition">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-bold text-gray-800 text-lg">{event.Title}</h4>
+                    <h4 className="font-bold text-gray-800 text-lg">{event.title}</h4>
                     <span className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded">
-                      {event.Type_name}
+                      {event.type_name}
                     </span>
-                    {event.Group_id && (
+                    {event.group_id && (
                       <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded">
                         🔒 {event.group_name || '限定群組'}
                       </span>
                     )}
+                    <span className={`px-2 py-1 text-xs font-medium rounded ${
+                      event.status === 'Open' ? 'bg-green-100 text-green-700' :
+                      event.status === 'Closed' ? 'bg-gray-100 text-gray-600' :
+                      'bg-red-100 text-red-600'
+                    }`}>
+                      {event.status === 'Open' ? '開放' : event.status === 'Closed' ? '已關閉' : '已取消'}
+                    </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-2">{event.Content}</p>
+                  <p className="text-gray-600 mb-2">{event.content}</p>
                   
                   <div className="flex gap-4 text-sm text-gray-500">
                     <span>👤 主辦：{event.owner_name || '已刪除'}</span>
-                    <span>📅 {formatDate(event.Start_time)}</span>
-                    <span>👥 {event.participant_count} / {event.Capacity} 人</span>
+                    <span>📅 {formatDate(event.start_time)}</span>
+                    <span>📍 {event.location || '地點未定'}</span>
+                    <span>👥 {event.participant_count} / {event.capacity} 人</span>
                   </div>
                 </div>
                 
                 <button
-                  onClick={() => handleDelete(event.Event_id, event.Title)}
+                  onClick={() => handleDelete(event.event_id, event.title)}
                   className="ml-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition"
                 >
                   刪除

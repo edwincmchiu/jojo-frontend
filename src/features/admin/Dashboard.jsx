@@ -87,7 +87,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="text-sm opacity-90">
-            限定群組活動比例：{overview.totalEvents > 0 ? ((overview.totalGroups / overview.totalEvents) * 100).toFixed(1) : 0}%
+            限定群組活動：{overview.groupEvents || 0} 個 ({overview.totalEvents > 0 ? ((overview.groupEvents / overview.totalEvents) * 100).toFixed(1) : 0}%)
           </div>
         </div>
 
@@ -96,14 +96,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <div className="text-5xl opacity-80">📊</div>
             <div className="text-right">
-              <div className="text-sm opacity-90">參與率</div>
+              <div className="text-sm opacity-90">平均參與率</div>
               <div className="text-4xl font-bold">
-                {overview.totalEvents > 0 ? ((overview.totalParticipations / (overview.totalEvents * 10)) * 100).toFixed(0) : 0}%
+                {overview.avgParticipationRate?.toFixed(1) || 0}%
               </div>
             </div>
           </div>
           <div className="text-sm opacity-90">
-            假設平均容量 10 人
+            {overview.totalParticipations} / {overview.totalCapacity} 人
           </div>
         </div>
 
@@ -166,42 +166,6 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* 快速操作 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">📋 快速操作</h3>
-          <div className="space-y-2">
-            <button className="w-full text-left px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition text-blue-600 font-medium">
-              新增活動類型
-            </button>
-            <button className="w-full text-left px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition text-green-600 font-medium">
-              新增群組
-            </button>
-            <button className="w-full text-left px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition text-purple-600 font-medium">
-              查看數據分析
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">💡 系統提示</h3>
-          <div className="space-y-3 text-sm text-gray-600">
-            <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
-              <span>系統運行正常</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-500">ℹ</span>
-              <span>本月活動數較上月成長 {overview.thisMonthEvents} 個</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-yellow-500">⚠</span>
-              <span>建議定期備份資料庫</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -112,17 +112,20 @@ function MainApp({ user, onLogout, currentTab, setCurrentTab }) {
               <span className="text-base">{item.label}</span>
             </button>
           ))}
+          
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <button 
+              onClick={onLogout}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-lg mb-2 text-gray-300 hover:bg-red-600 hover:text-white transition-all"
+            >
+              <span className="text-2xl">🚪</span>
+              <span className="text-base">登出</span>
+            </button>
+          </div>
         </nav>
 
-          <div className="p-4 border-t border-gray-700">
-          <button 
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all"
-          >
-            <span>🚪</span>
-            <span>登出</span>
-          </button>
-          <div className="mt-4 text-center text-xs text-gray-600">
+        <div className="p-4 border-t border-gray-700">
+          <div className="text-center text-xs text-gray-600">
             © 2025 JoJo 揪揪
           </div>
         </div>

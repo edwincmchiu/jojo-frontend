@@ -11,17 +11,16 @@ export default function EventFeed() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState(null); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 100;
   
-  // [關鍵狀態] 篩選狀態
+  const [showRecommend, setShowRecommend] = useState(false);
   const [filterType, setFilterType] = useState('全部');
-  const [isRecommend, setIsRecommend] = useState(false);
   const [filterGroup, setFilterGroup] = useState('all');
 
-  // [新增] 動態載入的選項
   const [activityTypes, setActivityTypes] = useState([{ value: "全部", label: "所有類型" }]);
   const [groupFilters, setGroupFilters] = useState([{ value: "all", label: "顯示所有活動" }]);
 
-  // [新增] 載入活動類型和群組列表
   useEffect(() => {
     const loadFilters = async () => {
       try {
@@ -30,17 +29,15 @@ export default function EventFeed() {
           fetchGroups()
         ]);
         
-        // 轉換活動類型格式
         const typeOptions = [
           { value: "全部", label: "所有類型" },
           ...types.map(t => ({ value: t.type_name, label: `${t.type_name}` }))
         ];
         setActivityTypes(typeOptions);
         
-        // 轉換群組格式
         const groupOptions = [
           { value: "all", label: "顯示所有活動" },
-          ...groups.map(g => ({ value: String(g.group_id), label: `${g.group_name}` }))
+          ...groups.map(g => ({ value: String(g.group_id), label: `${g.name}` }))
         ];
         setGroupFilters(groupOptions);
       } catch (error) {
@@ -51,32 +48,66 @@ export default function EventFeed() {
     loadFilters();
   }, []);
 
-  // [關鍵邏輯] 當篩選條件改變時，重新呼叫後端
   useEffect(() => {
     setLoading(true);
-    fetchEventFeed({
-      type: filterType,
-      groupId: filterGroup,
-      isRecommend: isRecommend
-    }).then(data => {
-      setEvents(data);
-      setLoading(false);
-    });
-  }, [filterType, filterGroup, isRecommend]); // 監聽這些變數
+    
+    if (showRecommend) {
+      fetchEventFeed({ isRecommend: true }).then(data => {
+        setEvents(data);
+        setCurrentPage(1);
+        setLoading(false);
+      });
+    } else {
+      fetchEventFeed({
+        type: filterType === '全部' ? null : filterType,
+        groupId: filterGroup === 'all' ? null : filterGroup,
+        isRecommend: false
+      }).then(data => {
+        setEvents(data);
+        setCurrentPage(1);
+        setLoading(false);
+      });
+    }
+  }, [showRecommend, filterType, filterGroup]);
 
   const handleJoin = async (id) => {
     if(!window.confirm('確定要報名這個活動嗎？')) return;
     
     setJoiningId(id);
-    const result = await joinEvent(id);
-
-    if (result.success) {
-      // 成功後，更新列表（模擬或重新拉取資料）
-      setEvents(prev => prev.map(ev => 
-        ev.id === id ? { ...ev, currentPeople: (ev.currentPeople || 0) + 1, hasJoined: true } : ev
-      ));
+    try {
+      await joinEvent(id);
+      alert('報名成功！');
+      
+      // 重新載入活動列表以獲取正確的參與人數
+      setLoading(true);
+      if (showRecommend) {
+        const data = await fetchEventFeed({ isRecommend: true });
+        setEvents(data);
+      } else {
+        const data = await fetchEventFeed({
+          type: filterType === '全部' ? null : filterType,
+          groupId: filterGroup === 'all' ? null : filterGroup,
+          isRecommend: false
+        });
+        setEvents(data);
+      }
+      setLoading(false);
+    } catch (err) {
+      const msg = err?.message || '';
+      if (msg.includes('已經報名') || msg.includes('已報名')) {
+        alert('你已經報名過這個活動囉！');
+      } else if (msg.includes('活動已額滿') || msg.includes('已滿')) {
+        alert('活動已額滿，無法報名');
+      } else if (msg.includes('限定群組') || msg.includes('不在該群組')) {
+        alert('此活動限定群組成員才能報名');
+      } else if (msg.includes('已關閉')) {
+        alert('活動已關閉，無法報名');
+      } else {
+        alert(msg || '加入活動失敗，請稍後再試');
+      }
+    } finally {
+      setJoiningId(null);
     }
-    setJoiningId(null);
   };
 
   if (loading) return <div className="p-10 text-center text-gray-500">正在載入活動...</div>;
@@ -84,58 +115,82 @@ export default function EventFeed() {
   return (
     <div className="pb-24 animate-fade-in">
       
-      {/* 1. Header 與篩選控制區 */}
-      <div className="bg-brand-dark text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-10">
-        <h1 className="text-xl font-bold tracking-wider text-brand-yellow">JoJo 活動廣場</h1>
-        
-        <div className="mt-4 flex flex-col gap-3">
-            
-            {/* 推薦按鈕 & 類型篩選 */}
-            <div className="flex gap-2">
-                <button 
-                    onClick={() => setIsRecommend(!isRecommend)}
-                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-bold transition-all border ${
-                        isRecommend 
-                        ? 'bg-brand-yellow text-brand-dark border-brand-yellow' 
-                        : 'bg-gray-700 text-gray-300 border-gray-600'
-                    }`}
-                >
-                    {isRecommend ? '★ 已開啟推薦' : '☆ 推薦給我'}
-                </button>
-
-                <select 
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    disabled={isRecommend} 
-                    className="flex-1 bg-gray-700 text-white text-sm rounded-xl px-3 border border-gray-600 outline-none"
-                >
-                    {activityTypes.map(type => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                </select>
-            </div>
-
-            {/* 限定群組篩選 */}
-            <select 
-                value={filterGroup}
-                onChange={(e) => setFilterGroup(e.target.value)}
-                className="w-full bg-gray-700 text-white text-sm rounded-xl px-3 py-2 border border-gray-600 outline-none"
-            >
-                {groupFilters.map(group => (
-                    <option key={group.value} value={group.value}>{group.label}</option>
-                ))}
-            </select>
-        </div>
+      {/* Header */}
+      <div className="bg-brand-dark text-white p-6 rounded-b-3xl shadow-lg mb-6">
+        <h1 className="text-2xl font-bold tracking-wider text-brand-yellow">🎯 找活動</h1>
+        <p className="text-sm text-gray-300 mt-1">發現有趣的活動，加入你的校園生活</p>
       </div>
 
-      {/* 2. 活動列表區 */}
+      <div className="px-4 space-y-6">
+        {/* Section 1: 一鍵推薦 */}
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-5 shadow-sm border border-yellow-200">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">✨ 為你推薦</h2>
+              <p className="text-xs text-gray-600 mt-1">根據你的群組和興趣推薦活動</p>
+            </div>
+            <button 
+              onClick={() => setShowRecommend(!showRecommend)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                showRecommend 
+                ? 'bg-brand-yellow text-brand-dark border-2 border-yellow-400' 
+                : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-yellow-400'
+              }`}
+            >
+              {showRecommend ? '★ 推薦中' : '☆ 一鍵推薦'}
+            </button>
+          </div>
+        </div>
+
+        {/* Section 2: 查詢活動 */}
+        {!showRecommend && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">🔍 查詢活動</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-600 mb-1.5 block">活動類型</label>
+                <select 
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="w-full bg-gray-50 text-gray-800 text-sm rounded-xl px-4 py-2.5 border border-gray-300 outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                >
+                  {activityTypes.map(type => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="text-xs text-gray-600 mb-1.5 block">限定群組</label>
+                <select 
+                  value={filterGroup}
+                  onChange={(e) => setFilterGroup(e.target.value)}
+                  className="w-full bg-gray-50 text-gray-800 text-sm rounded-xl px-4 py-2.5 border border-gray-300 outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                >
+                  {groupFilters.map(group => (
+                    <option key={group.value} value={group.value}>{group.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="px-4 space-y-4">
         {events.length === 0 && (
             <div className="text-center text-gray-400 py-10">
                 沒有符合條件的活動 🥲
             </div>
         )}
-        {events.map(ev => {
+        
+        {events.length > 0 && (
+          <div className="text-sm text-gray-500 text-center mb-4">
+            顯示 {((currentPage - 1) * eventsPerPage) + 1}-{Math.min(currentPage * eventsPerPage, events.length)} / {events.length} 個活動
+          </div>
+        )}
+        
+        {events.slice((currentPage - 1) * eventsPerPage, currentPage * eventsPerPage).map(ev => {
           // 渲染邏輯
           const percent = Math.min(100, (ev.currentPeople / ev.capacity) * 100);
           const isFull = ev.currentPeople >= ev.capacity;
@@ -148,12 +203,19 @@ export default function EventFeed() {
                   <div>
                     <h3 className="font-bold text-gray-800 line-clamp-1">{ev.title}</h3>
                     <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                      <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-600">{ev.type}</span>
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded font-medium">{ev.type}</span>
                       {ev.isGroupLimit && (
                         <span className="px-2 py-0.5 bg-red-50 text-red-500 border border-red-100 rounded">
                            🔒 {ev.groupName || '群組'}限定
                         </span>
                       )}
+                      <span className={`px-2 py-0.5 rounded font-medium ${
+                        ev.status === 'Open' ? 'bg-green-100 text-green-700' :
+                        ev.status === 'Closed' ? 'bg-gray-100 text-gray-600' :
+                        'bg-red-100 text-red-600'
+                      }`}>
+                        {ev.status === 'Open' ? '開放' : ev.status === 'Closed' ? '已關閉' : '已取消'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -202,6 +264,28 @@ export default function EventFeed() {
             </div>
           );
         })}
+        
+        {events.length > eventsPerPage && (
+          <div className="flex justify-center gap-3 mt-6 pb-6">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              ← 上一頁
+            </button>
+            <span className="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">
+              {currentPage} / {Math.ceil(events.length / eventsPerPage)}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(Math.ceil(events.length / eventsPerPage), p + 1))}
+              disabled={currentPage >= Math.ceil(events.length / eventsPerPage)}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              下一頁 →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

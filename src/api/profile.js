@@ -49,6 +49,8 @@ export const fetchUserProfile = async (userId) => {
         groupName: e.group_name || '公開活動',
         capacity: e.capacity,
         currentPeople: e.current_people ?? 0,
+        status: e.status || 'Open',
+        location: e.location || '地點未定',
       })),
       joinedEvents: (data.joinedEvents || []).map(e => ({
         id: e.event_id ?? e.id,
@@ -57,6 +59,8 @@ export const fetchUserProfile = async (userId) => {
         endTime: formatDateTime(e.end_time),
         typeName: e.type_name || '一般',
         groupName: e.group_name || '公開活動',
+        status: e.status || 'Open',
+        location: e.location || '地點未定',
       })),
       groups: data.groups || [],
     };
@@ -94,6 +98,16 @@ export const fetchAvailableTypes = async () => {
     return response.data;
   } catch (error) {
     console.error('fetchAvailableTypes error', error);
+    throw error;
+  }
+};
+
+export const cancelEvent = async (eventId) => {
+  try {
+    const response = await axios.patch(`${API_URL}/events/${eventId}/cancel`);
+    return response.data;
+  } catch (error) {
+    console.error('cancelEvent error', error);
     throw error;
   }
 };

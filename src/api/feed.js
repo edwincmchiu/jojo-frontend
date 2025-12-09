@@ -23,35 +23,41 @@ const formatTime = (isoString) => {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };
 
-// 1. 取得活動列表 (GET /events) - 包含篩選邏輯
 export const fetchEventFeed = async (filters = {}) => {
   try {
     const params = new URLSearchParams();
-    if (filters.type) params.append('type', filters.type);
-    if (filters.group) params.append('group', filters.group);
-    if (filters.recommend) params.append('recommend', filters.recommend);
-
-    const response = await axios.get(`${API_URL}/events/feed?${params}`);
-    const data = response.data;
-
-    // Normalize response: backend may return { events: [...] } or just [...]
-    const dbEvents = Array.isArray(data) ? data : (data?.events || data?.data || []);
-
-    if (!Array.isArray(dbEvents)) {
-      console.warn('[API] Response is not an array, returning empty:', data);
-      return [];
+    if (filters.type && filters.type !== '全部') params.append('type', filters.type);
+    if (filters.groupId && filters.groupId !== 'all') params.append('groupId', filters.groupId);
+    
+    if (filters.isRecommend) {
+      params.append('recommend', 'true');
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const userId = user.id || user.user_id;
+        params.append('userId', userId);
+      }
     }
 
+    const response = await fetch(`${API_BASE_URL}/events?${params}`);
+    const data = await response.json();
+
+    const dbEvents = Array.isArray(data) ? data : [];
+
     return dbEvents.map(ev => ({
-      id: ev.Event_id ?? ev.id,
-      title: ev.Title ?? ev.title,
-      description: ev.Description ?? ev.description,
-      type: ev.Type ?? ev.type,
-      startTime: ev.Start_time ?? ev.startTime,
-      capacity: ev.Capacity ?? ev.capacity,
-      currentPeople: ev.Current_people ?? ev.currentPeople ?? 0,
-      hostId: ev.Host_id ?? ev.hostId,
-      hostName: ev.Host_name ?? ev.hostName ?? 'Unknown',
+      id: ev.event_id,
+      title: ev.title,
+      description: ev.content,
+      type: ev.type_name,
+      startTime: formatTime(ev.start_time),
+      capacity: ev.capacity,
+      currentPeople: ev.current_people ?? 0,
+      hostId: ev.owner_id,
+      hostName: ev.owner_name ?? 'Unknown',
+      location: ev.location ?? '地點未定',
+      status: ev.status ?? 'Open',
+      isGroupLimit: !!ev.group_id,
+      groupName: ev.group_name,
     }));
   } catch (error) {
     console.error('[API] 取得活動列表失敗:', error);
@@ -59,20 +65,22 @@ export const fetchEventFeed = async (filters = {}) => {
   }
 };
 
-// 2. 加入活動 (POST /events/:id/join)
 export const joinEvent = async (eventId) => {
   try {
-    const currentUserId = 1; 
+    const userStr = localStorage.getItem('user');
+    if (!userStr) throw new Error('請先登入');
+    
+    const user = JSON.parse(userStr);
+    const userId = user.id || user.user_id;
 
     const response = await fetch(`${API_BASE_URL}/events/${eventId}/join`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUserId })
+      body: JSON.stringify({ userId })
     });
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      // 拋出後端回傳的錯誤訊息 (例如：你已經報名過這個活動囉！)
       throw new Error(errData.error || 'Join failed'); 
     }
 
@@ -80,7 +88,6 @@ export const joinEvent = async (eventId) => {
 
   } catch (error) {
     console.error("[API] 加入活動失敗:", error);
-    alert(error.message); 
-    return { success: false };
+    throw error;
   }
 };

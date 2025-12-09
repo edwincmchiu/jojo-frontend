@@ -129,34 +129,6 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* 活動類型佔比 - 圓餅圖 */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">🥧 活動類型佔比（圓餅圖）</h3>
-          {eventsByType.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">暫無資料</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={eventsByType}
-                  dataKey="event_count"
-                  nameKey="type"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  label={(entry) => `${entry.type} (${entry.event_count})`}
-                >
-                  {eventsByType.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
         {/* 群組參與度分析 */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">👥 群組參與度分析</h3>
@@ -220,9 +192,9 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* 活動填滿率 Top 20 */}
+        {/* 場地使用分析 Top 20 */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">🔥 活動填滿率 Top 20</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">🏢 校內場地使用分析 Top 20</h3>
           {capacityData.length === 0 ? (
             <div className="text-center py-10 text-gray-400">暫無資料</div>
           ) : (
@@ -231,16 +203,15 @@ export default function Analytics() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">排名</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">活動名稱</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">類型</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">容量</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">報名數</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">填滿率</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">場地名稱</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">建築</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">位置</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">使用次數</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {capacityData.map((item, index) => (
-                    <tr key={item.event_id} className="hover:bg-gray-50">
+                    <tr key={item.venue_id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">
                         <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
                           index === 0 ? 'bg-yellow-400 text-gray-900' :
@@ -251,31 +222,10 @@ export default function Analytics() {
                           {index + 1}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.title}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs">
-                          {item.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.capacity}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{item.current_participants}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                parseFloat(item.fill_rate) >= 80 ? 'bg-green-500' :
-                                parseFloat(item.fill_rate) >= 50 ? 'bg-yellow-500' :
-                                'bg-red-500'
-                              }`}
-                              style={{ width: `${Math.min(parseFloat(item.fill_rate), 100)}%` }}
-                            />
-                          </div>
-                          <span className="font-medium text-gray-700 min-w-[60px]">
-                            {item.fill_rate}%
-                          </span>
-                        </div>
-                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.venue_name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.building || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.location || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{item.booking_count} 次</td>
                     </tr>
                   ))}
                 </tbody>
@@ -284,26 +234,6 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* 統計摘要 */}
-        <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-          <h3 className="text-2xl font-bold mb-4">📋 統計摘要</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm opacity-90">活動類型數</div>
-              <div className="text-3xl font-bold">{eventsByType.length}</div>
-            </div>
-            <div>
-              <div className="text-sm opacity-90">活躍群組數</div>
-              <div className="text-3xl font-bold">{groupData.length}</div>
-            </div>
-            <div>
-              <div className="text-sm opacity-90">最高填滿率</div>
-              <div className="text-3xl font-bold">
-                {capacityData.length > 0 ? `${capacityData[0].fill_rate}%` : 'N/A'}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchUserProfile, addPreference, removePreference, addGroup, removeGroup, fetchAvailableGroups, fetchAvailableTypes } from '../../api/profile';
+import { fetchUserProfile, addPreference, removePreference, addGroup, removeGroup, fetchAvailableGroups, fetchAvailableTypes, cancelEvent } from '../../api/profile';
 import axios from 'axios';
 
 export default function UserProfile({userId}) {
@@ -88,6 +88,32 @@ export default function UserProfile({userId}) {
       }));
     } catch (err) {
       console.error('Error removing group:', err);
+    }
+  };
+
+  // 6. 取消活動
+  const handleCancelEvent = async (eventId, eventTitle, currentPeople) => {
+    const message = currentPeople > 0 
+      ? `確定要取消活動「${eventTitle}」嗎？\n目前有 ${currentPeople} 人已報名。`
+      : `確定要取消活動「${eventTitle}」嗎？`;
+    
+    if (!window.confirm(message)) return;
+    
+    try {
+      const response = await cancelEvent(eventId);
+      // 重新載入個人資料
+      const updatedProfile = await fetchUserProfile(user.id);
+      setUser(updatedProfile);
+      
+      const affectedCount = response?.data?.affectedParticipants || currentPeople || 0;
+      if (affectedCount > 0) {
+        alert(`活動已取消\n共有 ${affectedCount} 位參與者受到影響`);
+      } else {
+        alert('活動已取消');
+      }
+    } catch (err) {
+      console.error('Error canceling event:', err);
+      alert('取消活動失敗，請稍後再試');
     }
   };
 
@@ -249,15 +275,28 @@ export default function UserProfile({userId}) {
           {(activeTab === 'joined' ? user.joinedEvents : user.hostedEvents)?.map((ev) => (
             <div key={ev?.id ?? `event-${Math.random()}`} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="font-bold text-gray-800 text-lg">{ev.title}</h4>
-                <span className="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-lg font-medium">
-                  {ev.typeName}
-                </span>
+                <div className="flex items-center gap-2 flex-1">
+                  <h4 className="font-bold text-gray-800 text-lg">{ev.title}</h4>
+                  <span className="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-lg font-medium">
+                    {ev.typeName}
+                  </span>
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${
+                    ev.status === 'Open' ? 'bg-green-100 text-green-700' :
+                    ev.status === 'Closed' ? 'bg-gray-100 text-gray-600' :
+                    'bg-red-100 text-red-600'
+                  }`}>
+                    {ev.status === 'Open' ? '開放' : ev.status === 'Closed' ? '已關閉' : '已取消'}
+                  </span>
+                </div>
               </div>
               <div className="space-y-1 text-xs text-gray-600">
                 <div className="flex items-center gap-2">
                   <span>📅</span>
                   <span>{ev.startTime} ~ {ev.endTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>📍</span>
+                  <span>{ev.location || '地點未定'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>{ev.groupName === '公開活動' ? '🌍' : '🔒'}</span>
@@ -270,6 +309,16 @@ export default function UserProfile({userId}) {
                   </div>
                 )}
               </div>
+              {activeTab === 'hosted' && ev.status === 'Open' && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => handleCancelEvent(ev.id, ev.title, ev.currentPeople)}
+                    className="w-full py-2 px-4 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-all"
+                  >
+                    取消活動
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

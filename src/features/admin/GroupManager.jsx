@@ -5,7 +5,6 @@ export default function GroupManager() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupDesc, setNewGroupDesc] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
@@ -27,10 +26,9 @@ export default function GroupManager() {
 
     setIsAdding(true);
     try {
-      await addGroup(newGroupName.trim(), newGroupDesc.trim());
+      await addGroup(newGroupName.trim());
       alert('新增成功！');
       setNewGroupName('');
-      setNewGroupDesc('');
       loadGroups();
     } catch (error) {
       alert(error.message);
@@ -62,25 +60,18 @@ export default function GroupManager() {
       {/* 新增區域 */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h3 className="text-lg font-semibold mb-4">新增群組</h3>
-        <div className="space-y-3">
+        <div className="flex gap-3">
           <input
             type="text"
             value={newGroupName}
             onChange={(e) => setNewGroupName(e.target.value)}
             placeholder="群組名稱，例如：撲克牌社、電影同好會"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 outline-none"
-          />
-          <input
-            type="text"
-            value={newGroupDesc}
-            onChange={(e) => setNewGroupDesc(e.target.value)}
-            placeholder="群組描述（選填）"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 outline-none"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 outline-none"
           />
           <button
             onClick={handleAdd}
             disabled={isAdding}
-            className="w-full px-6 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-lg transition disabled:opacity-50"
+            className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-lg transition disabled:opacity-50"
           >
             {isAdding ? '新增中...' : '新增群組'}
           </button>
@@ -96,20 +87,22 @@ export default function GroupManager() {
 
         <div className="divide-y divide-gray-200">
           {groups.map((group) => (
-            <div key={group.Group_id} className="p-6 hover:bg-gray-50 transition">
+            <div key={group.group_id} className="p-6 hover:bg-gray-50 transition">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h4 className="font-bold text-gray-800 text-lg">{group.Name}</h4>
-                  {group.Description && (
-                    <p className="text-gray-600 mt-1">{group.Description}</p>
-                  )}
-                  <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="font-bold text-gray-800 text-lg">{group.name}</h4>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded">
+                      {group.category}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-sm text-gray-500">
                     <span>👥 {group.member_count} 位成員</span>
                     <span>📅 {group.event_count} 個活動</span>
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDelete(group.Group_id, group.Name)}
+                  onClick={() => handleDelete(group.group_id, group.name)}
                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition"
                 >
                   刪除

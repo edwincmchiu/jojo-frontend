@@ -5,6 +5,8 @@ export default function UserManager() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 100;
 
   useEffect(() => {
     loadUsers();
@@ -32,9 +34,24 @@ export default function UserManager() {
   };
 
   const filteredUsers = users.filter(user => 
-    user.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.Email?.toLowerCase().includes(searchTerm.toLowerCase())
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   if (loading) {
     return <div className="text-center py-10 text-gray-500">載入中...</div>;
@@ -80,10 +97,30 @@ export default function UserManager() {
       {/* 列表區域 */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">使用者列表</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            顯示 {filteredUsers.length} / {users.length} 位使用者
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">使用者列表</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                顯示 {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} / {filteredUsers.length} 位使用者 (第 {currentPage}/{totalPages} 頁)
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                ← 上一頁
+              </button>
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                下一頁 →
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -100,17 +137,17 @@ export default function UserManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.User_id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{user.User_id}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.Name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.Email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.Sex === 'Male' ? '男' : '女'}</td>
+              {currentUsers.map((user) => (
+                <tr key={user.user_id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{user.user_id}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{user.sex === 'Male' ? '男' : '女'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{user.hosted_count}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{user.joined_count}</td>
                   <td className="px-6 py-4 text-sm">
                     <button
-                      onClick={() => handleDelete(user.User_id, user.Name)}
+                      onClick={() => handleDelete(user.user_id, user.name)}
                       className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition"
                     >
                       刪除

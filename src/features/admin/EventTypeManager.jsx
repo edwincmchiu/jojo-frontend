@@ -87,17 +87,16 @@ export default function EventTypeManager() {
 
         <div className="divide-y divide-gray-200">
           {types.map((type) => (
-            <div key={type.Type_name} className="p-6 flex items-center justify-between hover:bg-gray-50 transition">
+            <div key={type.type_name} className="p-6 flex items-center justify-between hover:bg-gray-50 transition">
               <div>
-                <h4 className="font-bold text-gray-800 text-lg">{type.Type_name}</h4>
+                <h4 className="font-bold text-gray-800 text-lg">{type.type_name}</h4>
                 <p className="text-sm text-gray-500 mt-1">
                   {type.event_count} 個活動使用此類型
                 </p>
               </div>
               <button
-                onClick={() => handleDelete(type.Type_name)}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition"
-              >
+                onClick={() => handleDelete(type.type_name)}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition">
                 刪除
               </button>
             </div>
