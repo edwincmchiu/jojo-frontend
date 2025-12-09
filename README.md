@@ -4,6 +4,8 @@ The Jojo Frontend is a web application built using [Vite](https://vitejs.dev/) a
 
 It assumes the backend services are running on `localhost:3010`.
 
+The backend repository can be found [here](https://github.com/Shimeming/jojo-backend).
+
 ## Getting Started
 
 Follow these instructions to set up, run, and build the project.
