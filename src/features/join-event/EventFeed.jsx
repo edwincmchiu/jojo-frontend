@@ -241,7 +241,7 @@ export default function EventFeed() {
 
               {/* 卡片 Body */}
               <div className="space-y-2 mb-4">
-                <p className="text-sm text-gray-600 line-clamp-2">{ev.description || '無描述'}</p>
+                <p className="text-sm text-gray-600 preserve-newlines">{ev.description || '無描述'}</p>
                 <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
                   <span className="flex items-center gap-1">🕒 {ev.startTime || '未定'}</span>
                   <span className="flex items-center gap-1">📍 {ev.location}</span>
